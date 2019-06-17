@@ -1,8 +1,8 @@
 FROM scratch
 ENV PATH=/bin
 
-COPY op /bin/
+COPY adm /bin/
 
 WORKDIR /
 
-ENTRYPOINT ["/bin/op"]
+ENTRYPOINT ["/bin/adm"]
