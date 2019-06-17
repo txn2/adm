@@ -30,9 +30,6 @@ func main() {
 	serverCfg, _ := micro.NewServerCfg("Adm")
 	server := micro.NewServer(serverCfg)
 
-	// User token middleware
-	server.Router.Use(provision.UserTokenHandler())
-
 	// cache
 	csh := cache.New(1*time.Minute, 10*time.Minute)
 	provisionService := *provisionScheme + "://" + *provisionHost
@@ -87,6 +84,8 @@ func main() {
 		// requests for whoami account return the header value of
 		// X-DCP-Account
 		pa := c.Param("parentAccount")
+		server.Logger.Info("Parent account", zap.String("parent_id", pa))
+
 		if pa == "whoami" {
 			hdr := c.GetHeader("X-DCP-Account")
 			if hdr == "" {
@@ -97,8 +96,8 @@ func main() {
 			}
 
 			ak.SetPayloadType("WhoAmI")
-			ak.SetPayload(hdr)
-			c.Done()
+			ak.GinSend(hdr)
+			c.Abort()
 			return
 		}
 
@@ -128,6 +127,10 @@ func main() {
 			// valid key
 			return
 		}
+
+		// User token middleware
+		tokenHandler := provision.UserTokenHandler()
+		tokenHandler(c)
 
 		// Check token if one exists
 		userI, ok := c.Get("User")
