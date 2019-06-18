@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -75,7 +76,7 @@ func main() {
 		}
 
 		csh.Set(cacheKey, false, cache.DefaultExpiration)
-		return false, errors.New("got code " + string(res.StatusCode) + " from " + url)
+		return false, fmt.Errorf("got code %d from %s ", res.StatusCode, url)
 	}
 
 	accessHandler := func(c *gin.Context) {
@@ -131,6 +132,10 @@ func main() {
 		// User token middleware
 		tokenHandler := provision.UserTokenHandler()
 		tokenHandler(c)
+
+		if c.IsAborted() {
+			return
+		}
 
 		// Check token if one exists
 		userI, ok := c.Get("User")
